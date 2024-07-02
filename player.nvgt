@@ -30,7 +30,7 @@ void load_url() {
 		exit();
 	}
 	// Set to a hopefully sane volume.
-	player.volume = -40;
+	player.volume = -20;
 	player.play();
 }
 
@@ -42,8 +42,8 @@ void loop() {
 		else player.play();
 		speak((player.playing?"Playing.":"Paused."));
 	}
-	if (key_down(KEY_UP)) player.volume = player.volume+1;
-	if(key_down(KEY_DOWN)) player.volume=player.volume-1;
+	if (key_repeating(KEY_UP)) player.volume = player.volume+1;
+	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
 	if(key_pressed(KEY_V)) speak(round(player.volume, 2));
 	if(key_pressed(KEY_ESCAPE)) exit();
 }

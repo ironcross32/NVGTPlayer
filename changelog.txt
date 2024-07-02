@@ -1,0 +1,3 @@
+07/02/2024
+Changed initial volume to -20, should still have desired effect of not blasting ear drums while remaining more audible
+Changed key_down calls to key_repeating which makes volume adjustments more controlable and sane.
