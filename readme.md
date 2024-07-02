@@ -1,12 +1,10 @@
 # NVGT Player
 A simple example sound player for [NVGT](https://nvgt.gg).
 
-## Why?
-I wanted a simple sound player that would allow me to listen to a web stream and adjust the volume. More can be added later, but I thought this example might be useful to somebody wishing to load web URLs etc.
+Written by [braillescreen](https://github.com/braillescreen)
 
+Modified by [ironcross32](https://github.com/ironcross32)
 
-## Todo
-If I get time, here are some of the things I want to add:
-* If the stream fails, retry. Not sure how easy this is.
-* There is much more...
+### Introduction
 
+NVGTPlayer is an easy-to-use URL streamer.
