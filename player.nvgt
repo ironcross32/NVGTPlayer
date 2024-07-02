@@ -12,31 +12,52 @@
 */
 
 #include "speech.nvgt"
+#include "file_contents.nvgt"
+#include "form.nvgt"
+#include "dget.nvgt"
 
 sound player;
+form_controls main_form_controls;
 
 void main() {
-	load_url();
 	show_window("NVGT Player");
+	audio_form@ main_form = setup_main_form();
 	
-	while(true) loop();
+	while(true) loop(@main_form);
+}
+
+audio_form@ setup_main_form() {
+	audio_form mf;
+	mf.create_window();
+	int stream_list = mf.create_list("Streams", maximum_items = 0, multiselect = false, repeat_boundary_items = true);
+	main_form_controls.add("lst_streams", stream_list);
+	int new_url_button = mf.create_button("Open new URl");
+	main_form_controls.add("btn_new_url", new_url_button);
+	int keyboard_area = mf.create_keyboard_area("Direct Keyboard Input Area");
+	main_form_controls.add("kbd_main", keyboard_area);
+	int exit_button = mf.create_button("E&xit", primary = false, cancel=true);
+	main_form_controls.add("btn_exit", exit_button);
+	mf.focus_silently(main_form_controls.get("btn_exit"));
+	return (@mf);
 }
 
 void load_url() {
 	const string url = input_box("URL", "Enter the direct URL of a stream you would like to load.", "https://nwm.streamguys1.com/ktis-fm");
-	speak("Loading " + url + "...");
 	if (!player.load_url(url)) {
-		alert("Error", "There was an error loading the specified URL.");
-		exit();
+		speak("There was an error loading the specified URL.");
 	}
+	
 	// Set to a hopefully sane volume.
 	player.volume = -20;
 	player.play();
 }
 
-void loop() {
+void loop(audio_form@ main_form) {
 	wait(5);
 	
+	main_form.monitor();
+	if (main_form.is_pressed(main_form_controls.get("btn_exit"))) exit();
+	if (main_form.is_pressed(main_form_controls.get("btn_new_url"))) load_url();
 	if (key_pressed(KEY_SPACE)) {
 		if (player.playing) player.pause();
 		else player.play();
@@ -46,4 +67,26 @@ void loop() {
 	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
 	if(key_pressed(KEY_V)) speak(round(player.volume, 2));
 	if(key_pressed(KEY_ESCAPE)) exit();
+}
+
+class form_controls {
+	dictionary controls;
+	
+	void add(const string&in name, const int &in cidx) {
+		if (controls.exists(name)) {
+			return;
+		}
+		controls.set(name, cidx);
+	}
+	
+	void remove(const string&in name) {
+		if (controls.exists(name)) {
+			controls.delete(name);
+		}
+	}
+	
+	int get(const string&in name) {
+		// return -2 on failure to avoid ambiguity with form errors
+		return (dgetn(controls, name, def = -2));
+	}
 }
