@@ -17,6 +17,7 @@
 #include "dget.nvgt"
 
 sound player;
+stream_storage stream_list;
 form_controls main_form_controls;
 
 void main() {
@@ -29,10 +30,13 @@ void main() {
 audio_form@ setup_main_form() {
 	audio_form mf;
 	mf.create_window();
+	stream_list.set_form(@mf);
 	int stream_list = mf.create_list("Streams", maximum_items = 0, multiselect = false, repeat_boundary_items = true);
 	main_form_controls.add("lst_streams", stream_list);
 	int new_url_button = mf.create_button("Open new URl");
 	main_form_controls.add("btn_new_url", new_url_button);
+	int load_url_button = mf.create_button("Open URL from list");
+	main_form_controls.add("btn_load_url", load_url_button);
 	int keyboard_area = mf.create_keyboard_area("Direct Keyboard Input Area");
 	main_form_controls.add("kbd_main", keyboard_area);
 	int exit_button = mf.create_button("E&xit", primary = false, cancel=true);
@@ -41,15 +45,48 @@ audio_form@ setup_main_form() {
 	return (@mf);
 }
 
-void load_url() {
+void new_url() {
+	if (player.active) {
+		if (player.playing || player.paused) {
+			player.stop();
+		}
+		player.close();
+	}
 	const string url = input_box("URL", "Enter the direct URL of a stream you would like to load.", "https://nwm.streamguys1.com/ktis-fm");
 	if (!player.load_url(url)) {
 		speak("There was an error loading the specified URL.");
+		return;
 	}
-	
+	const string name = input_box("", "Enter the name you'd like to assign this URL in the list.");
+	if (name.is_empty()) {
+		alert("Error", "Name cannot be empty", false, MESSAGE_BOX_ERROR);
+		player.close();
+		return;
+	}
+	// Add the stream name and URl to the stream_list object
+	stream_list.add(name, url); // Will not add duplicates based on name
 	// Set to a hopefully sane volume.
 	player.volume = -20;
 	player.play();
+}
+
+void load_url_from_list(audio_form@ form) {
+	int cidx = main_form_controls.get("lst_streams");
+	int lidx = form.get_list_position(cidx);
+	string itm = form.get_list_item(cidx, lidx);
+	string url = stream_list.get(itm);
+	if (player.active) {
+		if (player.playing || player.paused) {
+			player.stop();
+		}
+		player.close();
+	}
+	if (player.load_url(url)) {
+		player.volume = -20;
+		player.play();
+	} else {
+		speak("There was an error loading the specified URL.");
+	}
 }
 
 void loop(audio_form@ main_form) {
@@ -57,7 +94,8 @@ void loop(audio_form@ main_form) {
 	
 	main_form.monitor();
 	if (main_form.is_pressed(main_form_controls.get("btn_exit"))) exit();
-	if (main_form.is_pressed(main_form_controls.get("btn_new_url"))) load_url();
+	if (main_form.is_pressed(main_form_controls.get("btn_new_url"))) new_url();
+	if (main_form.is_pressed(main_form_controls.get("btn_load_url"))) load_url_from_list(@main_form);
 	if (key_pressed(KEY_SPACE)) {
 		if (player.playing) player.pause();
 		else player.play();
@@ -88,5 +126,38 @@ class form_controls {
 	int get(const string&in name) {
 		// return -2 on failure to avoid ambiguity with form errors
 		return (dgetn(controls, name, def = -2));
+	}
+}
+
+class stream_storage {
+	dictionary streams;
+	audio_form@ form;
+	
+	void set_form(audio_form@ f) {
+		@form = f;
+	}
+	
+	void add(const string&in name, const string&in url) {
+		if (!streams.exists(name)) {
+			streams.set(name, url);
+			int cidx = main_form_controls.get("lst_streams");
+			form.add_list_item(cidx, name, -1, false, true);
+		}
+	}
+	
+	void remove (const string&in name) {
+		if (streams.exists(name)) {
+			streams.delete(name);
+		}
+	}
+	
+	string get(const string&in url) {
+		string itm = dgets(@streams, url, "");
+		return itm;
+	}
+	
+	string[]@ get_names() {
+		string[]@ names = streams.get_keys();
+		return @names;
 	}
 }
