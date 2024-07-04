@@ -43,12 +43,33 @@ audio_form@ setup_main_form() {
 	main_form_controls.add("btn_new_url", new_url_button);
 	int load_url_button = mf.create_button("Open URL from list");
 	main_form_controls.add("btn_load_url", load_url_button);
+	int output_devices_list = mf.create_list("Select Sound Output Device", 0, false, false);
+	main_form_controls.add("lst_output_devices", output_devices_list);
+	int change_output_device_button = mf.create_button("Change Output Device");
+	main_form_controls.add("btn_change_output", change_output_device_button);
+	populate_output_devices(@mf);
 	int keyboard_area = mf.create_keyboard_area("Direct Keyboard Input Area");
 	main_form_controls.add("kbd_main", keyboard_area);
 	int exit_button = mf.create_button("E&xit", primary = false, cancel=true);
 	main_form_controls.add("btn_exit", exit_button);
-	mf.focus_silently(main_form_controls.get("btn_exit"));
+	mf.focus_silently(main_form_controls.get("lst_streams"));
 	return (@mf);
+}
+
+void populate_output_devices(audio_form@ form) {
+	string[]@ devices = get_sound_output_devices();
+	devices.remove_at(0); // kill the no sound option
+	uint len = devices.length();
+	int cidx = main_form_controls.get("lst_output_devices");
+	for (uint i=0;i<len;i++) {
+		form.add_list_item(cidx, devices[i]);
+	}
+}
+
+void change_output_device(audio_form@ form) {
+	int cidx = main_form_controls.get("lst_output_devices");
+	int lidx = form.get_list_position(cidx) + 1; // Because of removal of no sound option in populate_output_devices()
+	sound_output_device = lidx;
 }
 
 void new_url() {
@@ -99,14 +120,14 @@ void loop(audio_form@ main_form) {
 	wait(5);
 	
 	main_form.monitor();
-	if (main_form.is_pressed(main_form_controls.get("btn_exit"))) exit();
+	if (main_form.is_pressed(main_form_controls.get("btn_exit"))) on_exit();
 	if (main_form.is_pressed(main_form_controls.get("btn_new_url"))) new_url();
 	if (main_form.is_pressed(main_form_controls.get("btn_load_url"))) load_url_from_list(@main_form);
+	if (main_form.is_pressed(main_form_controls.get("btn_change_output"))) change_output_device(@main_form);
 	if (key_pressed(KEY_SPACE)) handle_playback();
 	if (key_repeating(KEY_UP)) player.volume = player.volume+1;
 	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
 	if(key_pressed(KEY_V)) speak(round(player.volume, 2));
-	if(key_pressed(KEY_ESCAPE)) on_exit();
 }
 
 void handle_playback() {
