@@ -7,3 +7,5 @@ Implemented the stream list which populates as URLs are added.
 Implemented the button to load a URl saved to the list.
 07/04/2024
 Added a notice in player.nvgt stating that the original program had been modified and that this is a derivative of that work.
+Moved the play/pause operations to a function named handle_playback().
+Added a spoken message if the user presses space in the keyboard area before a URL has been loaded informing them of such.
