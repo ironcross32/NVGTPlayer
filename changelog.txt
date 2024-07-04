@@ -1,4 +1,9 @@
 07/02/2024
-Changed initial volume to -20, should still have desired effect of not blasting ear drums while remaining more audible
+Changed initial volume to -20, should still have desired effect of not blasting ear drums while remaining more audible.
 Changed key_down calls to key_repeating which makes volume adjustments more controlable and sane.
-Initial steps towardd switching to a form type interface taken
+Initial steps toward switching to a form type interface taken.
+07/03/2024
+Implemented the stream list which populates as URLs are added.
+Implemented the button to load a URl saved to the list.
+07/04/2024
+Added a notice in player.nvgt stating that the original program had been modified and that this is a derivative of that work.
