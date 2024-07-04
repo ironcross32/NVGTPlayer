@@ -23,10 +23,12 @@ Modified by Brandon Cross (ironcross32 on GitHub) starting on 07/02/2024
 sound player;
 stream_storage stream_list;
 form_controls main_form_controls;
+save_data savedata;
 
 void main() {
 	show_window("NVGT Player");
 	audio_form@ main_form = setup_main_form();
+	savedata.read_file();
 	
 	while(true) loop(@main_form);
 }
@@ -104,7 +106,7 @@ void loop(audio_form@ main_form) {
 	if (key_repeating(KEY_UP)) player.volume = player.volume+1;
 	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
 	if(key_pressed(KEY_V)) speak(round(player.volume, 2));
-	if(key_pressed(KEY_ESCAPE)) exit();
+	if(key_pressed(KEY_ESCAPE)) on_exit();
 }
 
 void handle_playback() {
@@ -120,6 +122,11 @@ void handle_playback() {
 		player.pause();
 	}
 }
+void on_exit() {
+	savedata.write_file();
+	exit();
+}
+
 
 class form_controls {
 	dictionary controls;
@@ -173,5 +180,59 @@ class stream_storage {
 	string[]@ get_names() {
 		string[]@ names = streams.get_keys();
 		return @names;
+	}
+	
+	json_object@ to_json() {
+		json_object@ storage = parse_json("{}");
+		if (streams.is_empty()) return (@storage);
+		string[] keys = streams.get_keys();
+		uint stream_size = streams.get_size();
+		for (uint i=0;i < stream_size;i++) {
+			wait(5);
+			storage.set(keys[i], dgets(streams, keys[i]));
+		}
+		return @storage;
+	}
+	
+	void to_dictionary(json_object@ loaded_contents) {
+		uint stream_size = loaded_contents.size();
+		if (stream_size == 0) return;
+		string[] keys = loaded_contents.get_keys();
+		string itm;
+		for (uint i=0;i < stream_size;i++) {
+			wait(5);
+			itm = loaded_contents[keys[i]];
+			streams.set(keys[i], itm);
+		}
+		populate_stream_list();
+	}
+	
+	void populate_stream_list() {
+		// Called automatically on loading from file
+		if (streams.is_empty()) return;
+		string[] keys = streams.get_keys();
+		uint size = streams.get_size();
+		int cidx = main_form_controls.get("lst_streams");
+		for (uint i=0;i<size;i++) {
+			form.add_list_item(cidx, keys[i], -1, false, true);
+		}
+	}
+}
+
+class save_data {
+	string filename = "settings.json";
+	void write_file() {
+	json_object@ streams = stream_list.to_json();
+	string file_contents = streams.stringify(2);
+	if (file_contents.is_empty() || file_contents == "{}") return;
+	put_file_contents(filename, file_contents);
+	}
+	
+	void read_file() {
+		json_object@ loaded_contents = parse_json("{}");
+		string file_contents = get_file_contents(filename);
+		if (file_contents.is_empty()) return;
+		@loaded_contents = parse_json(file_contents);
+		stream_list.to_dictionary(@loaded_contents);
 	}
 }
