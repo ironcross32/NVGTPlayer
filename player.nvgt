@@ -21,6 +21,8 @@ Modified by Brandon Cross (ironcross32 on GitHub) starting on 07/02/2024
 #include "dget.nvgt"
 
 sound player;
+const float BASE_VOLUME = -20;
+float previous_volume;
 stream_storage stream_list;
 form_controls main_form_controls;
 save_data savedata;
@@ -93,7 +95,8 @@ void new_url() {
 	// Add the stream name and URl to the stream_list object
 	stream_list.add(name, url); // Will not add duplicates based on name
 	// Set to a hopefully sane volume.
-	player.volume = -20;
+	player.volume = BASE_VOLUME;
+	previous_volume = BASE_VOLUME;
 	player.play();
 }
 
@@ -109,7 +112,8 @@ void load_url_from_list(audio_form@ form) {
 		player.close();
 	}
 	if (player.load_url(url)) {
-		player.volume = -20;
+		player.volume = BASE_VOLUME;
+		previous_volume = BASE_VOLUME;
 		player.play();
 	} else {
 		speak("There was an error loading the specified URL.");
@@ -131,29 +135,52 @@ void handle_form_input (audio_form@ main_form) {
 
 void handle_keyboard_input() {
 	if (key_pressed(KEY_SPACE)) handle_playback();
-	if (key_repeating(KEY_UP)) player.volume = player.volume+1;
-	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
-	if(key_pressed(KEY_V)) speak(round(player.volume, 2));
+	if (key_down(KEY_LSHIFT) || key_down(KEY_RSHIFT) && key_repeating(KEY_UP)) change_volume(15);
+	if (key_down(KEY_LSHIFT) || key_down(KEY_RSHIFT) && key_repeating(KEY_DOWN)) change_volume(-15);
+	if (key_repeating(KEY_UP)) change_volume(5);
+	if(key_repeating(KEY_DOWN)) change_volume(-5);
+	if(key_pressed(KEY_V)) {
+		string msg;
+		if (player.volume <= -100) msg = "minimum";
+		else if (player.volume >= 0) msg = "maximum";
+		else msg = string(round(player.volume, 2));
+		speak(msg);
+	}
 }
 
 void handle_playback() {
-	if (!player.active) {
-		speak("There is no URl currently loaded. Consider adding a new one or selecting one from the list.");
-		return;
-	}
-	if (player.paused || !player.playing) {
-		speak("Play");
-		player.play();
+	if (!player.active) return;
+	/*
+	It has come to my attention that pausing streams is dangerous because
+	eventually, the connection will drop and never be restarted.
+	hence, this function now simply mutes and unmutes the stream.
+	*/
+	
+	if (player.volume <= -100 && previous_volume >= -100) {
+		speak("Unmute");
+		player.slide_volume(previous_volume, 300);
 	} else {
-		speak("Pause");
-		player.pause();
+		speak("Mute");
+		player.slide_volume(-100, 300);
 	}
 }
+
+void change_volume(float amount) {
+	if (player.volume + amount > 0) {
+		amount = 0 - player.volume;
+		speak("Maximum");
+	} else if (player.volume + amount < -100) {
+		amount = -100 + player.volume;
+		speak("Minimum");
+	}
+	previous_volume = player.volume;
+	player.slide_volume((player.volume + amount), 300);
+}
+
 void on_exit() {
 	savedata.write_file();
 	exit();
 }
-
 
 class form_controls {
 	dictionary controls;

@@ -28,3 +28,8 @@ Fixed a potential issue that could have lead to the stream list not being saved.
 07/10/2024
 Carved input handling into two separate functions, handle_form_input() and handle_keyboard_input().
 
+Removed pausing in favor of muting due to issues with pausing interrupting the connection.
+
+Volume handling is now done through change_volume(), which clamps the amount before adding it.
+
+Added SHIFT+Up/Down for larger volume increments.
