@@ -6,13 +6,11 @@ Changed key_down calls to key_repeating which makes volume adjustments more cont
 Initial steps toward switching to a form type interface taken.
 
 07/03/2024
-
 Implemented the stream list which populates as URLs are added.
 
 Implemented the button to load a URl saved to the list.
 
 07/04/2024
-
 Added a notice in player.nvgt stating that the original program had been modified and that this is a derivative of that work.
 
 Moved the play/pause operations to a function named handle_playback().
@@ -26,3 +24,7 @@ Set the user focus when the main form is created to the list of streams rather t
 Added the ability to change the audio output device.
 
 Fixed a potential issue that could have lead to the stream list not being saved.
+
+07/10/2024
+Carved input handling into two separate functions, handle_form_input() and handle_keyboard_input().
+

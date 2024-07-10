@@ -118,12 +118,18 @@ void load_url_from_list(audio_form@ form) {
 
 void loop(audio_form@ main_form) {
 	wait(5);
-	
 	main_form.monitor();
+	handle_form_input(@main_form);
+	handle_keyboard_input();
+}
+void handle_form_input (audio_form@ main_form) {
 	if (main_form.is_pressed(main_form_controls.get("btn_exit"))) on_exit();
 	if (main_form.is_pressed(main_form_controls.get("btn_new_url"))) new_url();
 	if (main_form.is_pressed(main_form_controls.get("btn_load_url"))) load_url_from_list(@main_form);
 	if (main_form.is_pressed(main_form_controls.get("btn_change_output"))) change_output_device(@main_form);
+}
+
+void handle_keyboard_input() {
 	if (key_pressed(KEY_SPACE)) handle_playback();
 	if (key_repeating(KEY_UP)) player.volume = player.volume+1;
 	if(key_repeating(KEY_DOWN)) player.volume=player.volume-1;
